@@ -37,32 +37,31 @@ df = fetchData()
 
 mom = 1
 yoy = 12
+startFrom = 2013
 
 df['chg'] = df.close.pct_change(mom).fillna(0) * -100
 table = pd.DataFrame()
 
-startFrom = 2013
+columns = ['month']
+for year in range(startFrom, 2018):
+    columns.append(year)
 
-m = ['month']
-for x in range(startFrom, 2018):
-    m.append(x)
-
-f = []    
-for x in range(1,13):
-    l = [x]
-    for y in range(startFrom, 2018):
+table_list = []    
+for month in range(1,13):
+    row = [month]
+    for year in range(startFrom, 2018):
         try:
-            gg = df[(df.index.year == y) & (df.index.month == x)].chg.values.item(0)
+            v = df[(df.index.year == year) & (df.index.month == month)].chg.values.item(0)
         except:
-            gg = 0
+            v = 0
 
-        l.append(gg)
+        row.append(v)
     
-    f.append(l)
+    table_list.append(row)
 
-table = pd.DataFrame(f, columns=m)
+table = pd.DataFrame(table_list, columns=columns)
 table.index = table.month
 table.drop('month',axis=1, inplace=True)
 
 print(table)
-table.to_csv('performance.csv', sep='\t', encoding='utf-8')
+table.to_csv('performance.csv', sep=',', encoding='utf-8')
