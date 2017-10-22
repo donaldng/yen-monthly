@@ -51,7 +51,7 @@ for month in range(1,13):
     row = [month]
     for year in range(startFrom, 2018):
         try:
-            v = df[(df.index.year == year) & (df.index.month == month)].chg.values.item(0)
+            v = round(df[(df.index.year == year) & (df.index.month == month)].chg.values.item(0), 2)
         except:
             v = 0
 
