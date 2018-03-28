@@ -1,55 +1,42 @@
-# coding: utf-8
 import pandas as pd, requests, datetime, json, numpy as np, os
-
-# Download csv file from html link
-import urllib
-import urllib.request
+from pandas_datareader import data as pdr
+import fix_yahoo_finance as yf
+import time
 
 def fetchData():  
 
-    url = 'http://www.global-view.com/forex-trading-tools/forex-history/exchange_csv_report.html?CLOSE_2=ON&start_date=01/01/2008&stop_date=10/22/2017&Submit=Get%20Monthly%20Stats'
-    urllib.request.urlretrieve(url, 'tmp.csv')
+    yf.pdr_override()
+    
+    df = pdr.get_data_yahoo("BTC-USD", "2009-01-01", "2019-01-01")
 
-    df = pd.read_csv('tmp.csv')
-    os.remove('tmp.csv')
+    df["Date"] = df.index
 
-    df['date'] = pd.to_datetime(df['Month'])
+    df.rename(columns={'Close': 'close'}, inplace=True)
+    df.rename(columns={'Date': 'date'}, inplace=True)
     
     df.index = pd.to_datetime(df.date)
-    df.drop('Month', axis=1, inplace=True)
-    df.drop('date', axis=1, inplace=True)
     
-    # drop all irrelevant column
-    df.drop('USD/JPY High', axis=1, inplace=True)
-    df.drop('USD/JPY Low', axis=1, inplace=True)
-    df.drop('Unnamed: 4', axis=1, inplace=True)
-
-
-    df = df.sort_index()
+    df = df.resample('M').last()
     
-    df.rename(columns={'USD/JPY Close': 'close'}, inplace=True)
-
-
     return df
-
 
 df = fetchData()
 
 mom = 1
 yoy = 12
-startFrom = 2013
+startFrom = 2011
 
-df['chg'] = df.close.pct_change(mom).fillna(0) * -100
+df['chg'] = df.close.pct_change(mom).fillna(0) * 100
 table = pd.DataFrame()
 
 columns = ['month']
-for year in range(startFrom, 2018):
+for year in range(startFrom, 2019):
     columns.append(year)
 
 table_list = []    
 for month in range(1,13):
     row = [month]
-    for year in range(startFrom, 2018):
+    for year in range(startFrom, 2019):
         try:
             v = round(df[(df.index.year == year) & (df.index.month == month)].chg.values.item(0), 2)
         except:
